@@ -10,6 +10,7 @@ import uuid
 import os
 import hashlib
 import qrcode
+import re
 
 app = Flask(__name__)
 # Configure database
@@ -64,72 +65,6 @@ def load_user(user_id):
 def index():
     return render_template('index.html')
 
-@app.route('/inscription', methods=['GET', 'POST'])
-def inscription():
-    if request.method == 'POST':
-        try:
-            # Retrieve form data
-            numero_bon = request.form['numero_bon']
-            nom_carnet = request.form['nom_carnet']
-            nom = request.form['nom']
-            prenom = request.form['prenom']
-            email = request.form['email']
-            telephone = request.form['telephone']
-            entreprise = request.form['entreprise']
-            fonction = request.form['fonction']
-            
-            # Handle image upload
-            image_bon = request.files['image_bon']
-            unique_filename = f"{uuid.uuid4().hex}{os.path.splitext(image_bon.filename)[1]}"
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            image_bon.save(image_path)
-            image_bon_path = f"uploads/{unique_filename}"  # Store with prefix for static URL
-            
-            # Generate data hash
-            participant_data = f"{numero_bon}{nom_carnet}{nom}{prenom}{email}"
-            data_hash = sha256(participant_data.encode()).hexdigest()
-            
-            # Create participant
-            participant = Participant(
-                numero_bon=numero_bon,
-                nom_carnet=nom_carnet,
-                nom=nom,
-                prenom=prenom,
-                email=email,
-                telephone=telephone,
-                entreprise=entreprise,
-                fonction=fonction,
-                image_bon=image_bon_path,
-                data_hash=data_hash
-            )
-            db.session.add(participant)
-            db.session.commit()
-            
-            # Generate QR code
-            qr = qrcode_module.QRCode(
-                version=1,
-                error_correction=qrcode_module.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
-            )
-            qr.add_data(data_hash)
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="black", back_color="white")
-            
-            # Save QR code to static/qrcode folder
-            qr_filename = f"{participant.id}.png"
-            qr_path = os.path.join(app.config['QR_CODE_FOLDER'], qr_filename)
-            img.save(qr_path)
-            
-            flash('Inscription réussie', 'success')
-            return redirect(url_for('admin_dashboard'))
-        
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Erreur lors de l\'inscription: {str(e)}', 'error')
-            return redirect(url_for('inscription'))
-    
-    return render_template('inscription.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -273,6 +208,101 @@ def verifier():
             return render_template('verifier.html', error="Participant introuvable.")
     
     return render_template('verifier.html')
+
+@app.route('/search-participant')
+def search_participant():
+    data_hash = request.args.get('hash')
+    if not data_hash:
+        return jsonify({"found": False, "error": "Aucun hash fourni"}), 400
+    
+    # Recherche du participant dans la base de données par le hash
+    participant = Participant.query.filter_by(data_hash=data_hash).first()
+    
+    if participant:
+        return jsonify({
+            "found": True,
+            "id": participant.id,
+            "nom": participant.nom,
+            "prenom": participant.prenom,
+            "evenement":participant.nom_carnet,
+        })
+    else:
+        return jsonify({"found": False, "error": "Participant non trouvé"}), 404
+
+
+
+
+# Fonction pour valider l'email et éliminer les caractères spéciaux
+def validate_email(email):
+    # Filtrage des caractères spéciaux
+    email = re.sub(r'[^\w\.-@]', '', email)  # Garde seulement les lettres, chiffres, '.', '-', et '@'
+    
+    # Expression régulière pour valider l'email
+    regex = r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}$'
+    return re.match(regex, email)
+
+def validate_phone(phone):
+    # Suppression des espaces et autres caractères non numériques sauf le '+'
+    phone = re.sub(r'\s+', '', phone)  # Supprime les espaces
+    phone = re.sub(r'[^\d+]', '', phone)  # Garde uniquement les chiffres et '+'
+    
+    # Expression régulière pour valider le téléphone (8 à 15 chiffres)
+    regex = r'^\+?\d{8,15}$'
+    
+    # Validation
+    if not re.match(regex, phone):
+        return {"error": "Numéro de téléphone invalide", "success": False}
+    return {"success": True}
+
+@app.route('/inscription', methods=['POST','GET'])
+def inscription():
+    if request.method == 'POST':
+        try:
+            numero_bon = request.form['numero_bon']
+            nom_carnet = request.form['nom_carnet']
+            nom = request.form['nom']
+            prenom = request.form['prenom']
+            email = request.form['email']
+            telephone = request.form['telephone']
+
+            # Hachage des données sensibles
+            data_hash = generate_hash(
+            nom, prenom,telephone, numero_bon, nom_carnet
+            )
+
+            
+
+            # Création du participant
+            new_participant = Participant(
+                nom=nom,
+                prenom=prenom,
+                telephone=telephone,
+                numero_bon=numero_bon,
+                nom_carnet=nom_carnet,
+                email=f"{nom}.{prenom}@example.com",
+                entreprise="Inconnue",
+                fonction="Inconnue",
+                image_bon="default.jpg",
+                data_hash=data_hash
+            )
+
+            db.session.add(new_participant)
+            db.session.commit()  # Permet d'obtenir l'ID généré
+            participant=Participant.query.filter_by(nom=nom,prenom=prenom,numero_bon=numero_bon,nom_carnet=nom_carnet,telephone=telephone).first()
+            # Générer le QR code
+            qr_code_path = generate_qr_code(participant.id, data_hash)
+            new_participant.qr_code_url = qr_code_path
+            db.session.commit()
+            return jsonify({"success": True, "qr_code_path": qr_code_path})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+    else:
+        return render_template('inscription.html')
+
+
+@app.route('/inscription_confirmation', methods=['GET'])
+def inscription_confirmation():
+    return render_template('inscription_confirmee.html')
 
 def init_db():
     with app.app_context():

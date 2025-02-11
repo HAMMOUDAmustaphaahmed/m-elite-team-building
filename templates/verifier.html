@@ -5,44 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vérification QR Code</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        #video {
+            border: 1px solid black;
+            width: 320px;
+            height: 240px;
+            cursor: pointer; /* Indiquer que l'on peut cliquer pour changer de caméra */
+        }
+        #qrResult {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #searchResult {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
+
     <h1>Scanner le QR Code</h1>
-    <video id="video" width="100%" height="auto" autoplay></video>
-    <div id="result">
-        <h2>QR Code Contenu :</h2>
-        <pre id="qrResult">Aucun QR Code détecté</pre>
-    </div>
-
-    <form id="scanForm" method="POST">
-        <input type="hidden" name="hash" id="hashInput" value="">
-        <button type="submit">Rechercher le participant</button>
-    </form>
-
-    {% if participant %}
-    <div>
-        <h2>Participant trouvé :</h2>
-        <p><strong>Nom :</strong> {{ participant.nom }}</p>
-        <p><strong>Matricule :</strong> {{ participant.matricule }}</p>
-        <p><strong>Type d'abonnement :</strong> {{ participant.abonnement_type }}</p>
-    </div>
-    {% elif error %}
-    <p style="color: red;">{{ error }}</p>
-    {% endif %}
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <p id="qrResult">Aucun QR code détecté</p>
+    <div id="searchResult" style="
+    background-color: #d4edda; /* Vert clair */
+    color: #155724; /* Vert foncé */
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #c3e6cb;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    "></div>
 
     <script>
-        // Fonction pour accéder à la caméra et lire un QR code
-        function startScanner() {
-            // Accéder à la caméra
-            navigator.mediaDevices.getUserMedia({ video: true })
+        let currentStream = null;
+        let currentCameraId = null;
+
+        // Fonction pour démarrer la caméra
+        function startScanner(cameraId) {
+            // Libérer la caméra précédente si elle existe
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: { deviceId: cameraId ? { exact: cameraId } : undefined }
+            };
+
+            navigator.mediaDevices.getUserMedia(constraints)
                 .then(function (stream) {
                     const videoElement = document.getElementById('video');
                     videoElement.srcObject = stream;
                     videoElement.setAttribute("playsinline", true); // Pour iOS
                     videoElement.play();
-
-                    // Scanner le QR code
-                    scanQRCode();
+                    currentStream = stream;
                 })
                 .catch(function (error) {
                     console.error("Erreur d'accès à la caméra : ", error);
@@ -50,38 +78,111 @@
                 });
         }
 
-        // Fonction pour scanner le QR code
-        function scanQRCode() {
+        // Fonction de détection du QR Code
+        function detectQRCode() {
             const videoElement = document.getElementById('video');
-            const canvas = document.createElement('canvas');
+            const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
+            const qrResult = document.getElementById('qrResult');
+            const searchResult = document.getElementById('searchResult');
+    
+            // Récupérer l'image du flux vidéo
+            if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                canvas.width = videoElement.videoWidth;
+                canvas.height = videoElement.videoHeight;
+                context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    
+                // Scanner l'image pour un QR code
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+    
+                if (code) {
+                    qrResult.textContent = "QR Code détecté: " ;
+    
+                    // Effectuer la recherche du participant avec l'ID du QR code
+                    fetch(`/search-participant?hash=${code.data}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.found) {
+                                searchResult.innerHTML = ` 
+                                    <strong>Participant trouvé:</strong><br>
+                                    ID: ${data.id}<br>
+                                    Nom: ${data.nom}<br>
+                                    Prénom: ${data.prenom}<br>
+                                    Evenement: ${data.evenement}`;
+                            } else {
+                                searchResult.innerHTML = `
+    <div style="
+        background-color: #f8d7da; /* Rouge clair */
+        color: #721c24; /* Rouge foncé */
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 20px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    ">
+        ⚠️ <strong>Erreur :</strong> ${data.error}
+    </div>
+`;
 
-            function detectQRCode() {
-                // Détecter la vidéo à chaque frame
-                if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
-                    canvas.height = videoElement.videoHeight;
-                    canvas.width = videoElement.videoWidth;
-                    context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-                    // Scanner le QR code
-                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-                    if (code) {
-                        document.getElementById('qrResult').textContent = code.data;
-                        document.getElementById('hashInput').value = code.data; // Mettre le hash du QR code dans le formulaire
-                    } else {
-                        document.getElementById('qrResult').textContent = "Aucun QR Code détecté";
-                    }
+                            }
+                        })
+                        .catch(error => {
+                            searchResult.innerHTML = '<strong>Erreur</strong>: Impossible de se connecter au serveur.';
+                        });
+                } else {
+                    qrResult.textContent = "Aucun QR code détecté";
                 }
-                requestAnimationFrame(detectQRCode);
             }
-
-            detectQRCode();
+    
+            requestAnimationFrame(detectQRCode); // Continuer à détecter les QR codes
         }
 
-        // Démarrer le scanner dès le chargement de la page
-        window.onload = startScanner;
+        // Fonction pour basculer entre la caméra avant et arrière
+        function toggleCamera() {
+            getAvailableCameras().then(devices => {
+                // Chercher l'ID de la caméra arrière (si disponible)
+                const rearCamera = devices.find(device => device.kind === 'videoinput' && device.label.toLowerCase().includes('back'));
+                const frontCamera = devices.find(device => device.kind === 'videoinput' && device.label.toLowerCase().includes('front'));
+
+                if (currentCameraId === rearCamera?.deviceId) {
+                    currentCameraId = frontCamera?.deviceId;
+                } else {
+                    currentCameraId = rearCamera?.deviceId;
+                }
+
+                startScanner(currentCameraId);
+            }).catch(error => {
+                console.error("Erreur lors de la récupération des périphériques:", error);
+            });
+        }
+
+        // Fonction pour récupérer les caméras disponibles
+        function getAvailableCameras() {
+            return navigator.mediaDevices.enumerateDevices()
+                .then(devices => devices.filter(device => device.kind === 'videoinput'));
+        }
+
+        // Démarrer la caméra au chargement de la page
+        window.onload = function () {
+            getAvailableCameras().then(devices => {
+                const frontCamera = devices.find(device => device.kind === 'videoinput' && device.label.toLowerCase().includes('front'));
+                if (frontCamera) {
+                    currentCameraId = frontCamera.deviceId;
+                    startScanner(currentCameraId);
+                }
+            }).catch(error => {
+                console.error("Erreur d'accès aux caméras:", error);
+            });
+
+            // Ajouter un événement de clic sur la vidéo pour basculer la caméra
+            document.getElementById('video').addEventListener('click', toggleCamera);
+
+            // Démarrer la détection de QR code
+            requestAnimationFrame(detectQRCode);
+        };
     </script>
 </body>
 </html>
