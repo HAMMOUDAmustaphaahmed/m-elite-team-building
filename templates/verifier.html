@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification QR Code</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+</head>
+<body>
+    <h1>Scanner le QR Code</h1>
+    <video id="video" width="100%" height="auto" autoplay></video>
+    <div id="result">
+        <h2>QR Code Contenu :</h2>
+        <pre id="qrResult">Aucun QR Code détecté</pre>
+    </div>
+
+    <form id="scanForm" method="POST">
+        <input type="hidden" name="hash" id="hashInput" value="">
+        <button type="submit">Rechercher le participant</button>
+    </form>
+
+    {% if participant %}
+    <div>
+        <h2>Participant trouvé :</h2>
+        <p><strong>Nom :</strong> {{ participant.nom }}</p>
+        <p><strong>Matricule :</strong> {{ participant.matricule }}</p>
+        <p><strong>Type d'abonnement :</strong> {{ participant.abonnement_type }}</p>
+    </div>
+    {% elif error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <script>
+        // Fonction pour accéder à la caméra et lire un QR code
+        function startScanner() {
+            // Accéder à la caméra
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    const videoElement = document.getElementById('video');
+                    videoElement.srcObject = stream;
+                    videoElement.setAttribute("playsinline", true); // Pour iOS
+                    videoElement.play();
+
+                    // Scanner le QR code
+                    scanQRCode();
+                })
+                .catch(function (error) {
+                    console.error("Erreur d'accès à la caméra : ", error);
+                    alert("Impossible d'accéder à la caméra.");
+                });
+        }
+
+        // Fonction pour scanner le QR code
+        function scanQRCode() {
+            const videoElement = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            function detectQRCode() {
+                // Détecter la vidéo à chaque frame
+                if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                    canvas.height = videoElement.videoHeight;
+                    canvas.width = videoElement.videoWidth;
+                    context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+                    // Scanner le QR code
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+                    if (code) {
+                        document.getElementById('qrResult').textContent = code.data;
+                        document.getElementById('hashInput').value = code.data; // Mettre le hash du QR code dans le formulaire
+                    } else {
+                        document.getElementById('qrResult').textContent = "Aucun QR Code détecté";
+                    }
+                }
+                requestAnimationFrame(detectQRCode);
+            }
+
+            detectQRCode();
+        }
+
+        // Démarrer le scanner dès le chargement de la page
+        window.onload = startScanner;
+    </script>
+</body>
+</html>

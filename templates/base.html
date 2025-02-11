@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventPass - {% block title %}{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --accent: #818cf8;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Sidebar Modern */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: -280px;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            color: var(--dark);
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 0.5rem 1rem;
+            border-radius: 0.75rem;
+        }
+
+        .nav-item:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateX(8px);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 0;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Navbar Design */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            letter-spacing: -0.5px;
+        }
+
+        .burger-btn {
+            background: var(--primary);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: 0.3s ease;
+        }
+
+        .burger-btn:hover {
+            background: var(--secondary);
+        }
+
+        /* Modal Modern */
+        .modal {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 500px;
+            animation: modalSlide 0.4s ease;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-brand { font-size: 1.25rem; }
+            .sidebar { width: 80%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Enhanced Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>EventPass Pro</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem;">Gestion d'événements</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                <i class="fas fa-chart-line mr-3"></i> Tableau de bord
+            
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Modern Navbar -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-header">
+                    <button class="burger-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <a href="/" class="nav-brand">🎟️ EventPass</a>
+                </div>
+                {% if current_user.is_authenticated %}
+                <div class="nav-links">
+                    <a href="{{ url_for('logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        <span class="hidden-mobile">Déconnexion</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+
+        <main class="container">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Scripts remain the same -->
+</body>
+</html>

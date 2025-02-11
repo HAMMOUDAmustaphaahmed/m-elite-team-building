@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar-container {
+            width: 250px;
+            height: 100vh;
+            background: var(--primary);
+            color: white;
+            position: fixed;
+            left: -250px;
+            transition: 0.3s ease-in-out;
+            padding-top: 20px;
+        }
+        .sidebar-container.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-links li {
+            padding: 15px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .nav-links li:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            font-size: 1.1rem;
+            display: block;
+        }
+
+        /* Button Burger */
+        .burger-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 20px;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .burger-btn:hover {
+            background: var(--dark);
+        }
+
+        
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+        }
+
+        tr:hover {
+            background: #f1f5f9;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn-edit {
+            background: #facc15;
+            color: black;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .qr-code img {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+        /* MODAL STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-body {
+            margin: 15px 0;
+        }
+
+        .modal-footer {
+            text-align: right;
+        }
+
+        .close {
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #ccc;
+            color: black;
+        }
+        /* SEARCH INPUT */
+        .search-container {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .search-container input {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar-container" id="sidebar">
+        <div class="sidebar-header">Menu</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('verifier') }}">Vérifier</a></li>
+
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Button Burger -->
+    <button class="burger-btn" id="burger-btn">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="content-container" id="content">
+        <!-- BOUTON AJOUTER -->
+    <div style="text-align: right; margin-bottom: 10px;">
+        <button class="btn btn-primary" onclick="openAddModal()">➕ Ajouter un Participant</button>
+    </div>
+        <h2>Liste des Participants</h2>
+        <!-- SEARCH INPUT -->
+    <div class="search-container">
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Rechercher par identifiant ou nom de carnet...">
+    </div>
+        
+        <table id="participantsTable">
+            <thead>
+                <tr>
+                    <th>Identifiant</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Téléphone</th>
+                    <th>Numéro de Bon</th>
+                    <th>Nom du Carnet</th>
+                    <th>QR Code</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in participants %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.nom }}</td>
+                    <td>{{ p.prenom }}</td>
+                    <td>{{ p.telephone }}</td>
+                    <td>{{ p.numero_bon }}</td>
+                    <td>{{ p.nom_carnet }}</td>
+                    <!-- Image du QR Code -->
+                    <td class="qr-code">
+                        <img src="{{ p.id }}" alt="QR Code" onclick="openQrModal('{{ p.id }}')">
+                    </td>
+                    <td class="actions">
+                        <button class="btn btn-edit" onclick="openEditModal('{{ p.id }}', '{{ p.nom }}', '{{ p.prenom }}', '{{ p.telephone }}','{{ p.numero_bon }}','{{ p.nom_carnet }}')">Éditer</button>
+                        <button class="btn btn-delete" onclick="openDeleteModal('{{ p.id }}')">Supprimer</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+<!-- Modal pour afficher le QR code -->
+<div id="qrModal" class="modal">
+    <span class="close" onclick="closeQrModal()">&times;</span>
+    <img id="qrImage" class="modal-content" alt="QR Code">
+</div>
+    <script>
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content");
+        const burgerBtn = document.getElementById("burger-btn");
+
+        burgerBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("active");
+            content.classList.toggle("full");
+        });
+    </script>
+   
+   <script>
+    function openEditModal(id, nom, prenom, telephone, numeroBon, nomCarnet) {
+        document.getElementById("editId").value = id;
+        document.getElementById("editNom").value = nom;
+        document.getElementById("editPrenom").value = prenom;
+        document.getElementById("editTelephone").value = telephone;
+        document.getElementById("editNumeroBon").value = numeroBon;
+        document.getElementById("editNomCarnet").value = nomCarnet;
+        document.getElementById("editModal").style.display = "flex";
+    }
+    
+    function closeEditModal() {
+        document.getElementById("editModal").style.display = "none";
+    }
+    
+    function saveEdit() {
+        let id = document.getElementById("editId").value;
+        let nom = document.getElementById("editNom").value;
+        let prenom = document.getElementById("editPrenom").value;
+        let telephone = document.getElementById("editTelephone").value;
+        let numeroBon = document.getElementById("editNumeroBon").value;
+        let nomCarnet = document.getElementById("editNomCarnet").value;
+    
+        fetch(`/edit_participant/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nom, prenom, telephone, numeroBon, nomCarnet })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Modification avec succès !");
+                location.reload();
+            } else {
+                alert("Erreur lors de la modification.");
+            }
+        });
+        closeEditModal();
+    }
+    
+    function openDeleteModal(id) {
+        document.getElementById("deleteId").value = id;
+        document.getElementById("deleteModal").style.display = "flex";
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById("deleteModal").style.display = "none";
+    }
+    
+    function confirmDelete() {
+        let id = document.getElementById("deleteId").value;
+    
+        fetch(`/delete_participant/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Participant supprimé !");
+                location.reload();
+            } else {
+                alert("Erreur lors de la suppression.");
+            }
+        });
+        closeDeleteModal();
+    }
+    </script>
+  
+  
+<!-- MODAL AJOUTER -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Ajouter un Participant</h3>
+            <span class="close" onclick="closeAddModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="addForm">
+                <div class="input-group">
+                    <label>Nom</label>
+                    <input type="text" id="addNom">
+                </div>
+                <div class="input-group">
+                    <label>Prénom</label>
+                    <input type="text" id="addPrenom">
+                </div>
+                <div class="input-group">
+                    <label>Téléphone</label>
+                    <input type="text" id="addTelephone">
+                </div>
+                <div class="input-group">
+                    <label>Numéro de Bon</label>
+                    <input type="text" id="addNumeroBon">
+                </div>
+                <div class="input-group">
+                    <label>Nom du Carnet</label>
+                    <input type="text" id="addNomCarnet">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeAddModal()">Annuler</button>
+            <button class="btn btn-primary" onclick="saveAdd()">Ajouter</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Modifier Participant</h3>
+            <span class="close" onclick="closeEditModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="input-group">
+                    <label>Nom</label>
+                    <input type="text" id="editNom">
+                </div>
+                <div class="input-group">
+                    <label>Prénom</label>
+                    <input type="text" id="editPrenom">
+                </div>
+                <div class="input-group">
+                    <label>Téléphone</label>
+                    <input type="text" id="editTelephone">
+                </div>
+                <div class="input-group">
+                    <label>Numéro de Bon</label>
+                    <input type="text" id="editNumeroBon">
+                </div>
+                <div class="input-group">
+                    <label>Nom du Carnet</label>
+                    <input type="text" id="editNomCarnet">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeEditModal()">Annuler</button>
+            <button class="btn btn-primary" onclick="saveEdit()">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DELETE -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Supprimer Participant</h3>
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Voulez-vous vraiment supprimer ce participant ?</p>
+            <input type="hidden" id="deleteId">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+            <button class="btn btn-delete" onclick="confirmDelete()">Supprimer</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function filterTable() {
+        let input = document.getElementById("searchInput").value.toLowerCase();
+        let table = document.getElementById("participantsTable");
+        let rows = table.getElementsByTagName("tr");
+    
+        for (let i = 1; i < rows.length; i++) { // Skip header row
+            let cells = rows[i].getElementsByTagName("td");
+            if (cells.length < 6) continue; // Ensure row has enough columns
+    
+            let identifiant = cells[0].innerText.toLowerCase(); // Identifiant
+            let nomCarnet = cells[5].innerText.toLowerCase(); // Nom du Carnet
+    
+            // Show row if input matches Identifiant OR Nom du Carnet
+            if (identifiant.includes(input) || nomCarnet.includes(input)) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
+    }
+    </script>
+<script>
+    function openAddModal() {
+        document.getElementById("addModal").style.display = "flex";
+    }
+    
+    function closeAddModal() {
+        document.getElementById("addModal").style.display = "none";
+    }
+    function saveAdd() {
+    let nom = document.getElementById("addNom").value;
+    let prenom = document.getElementById("addPrenom").value;
+    let telephone = document.getElementById("addTelephone").value;
+    let numeroBon = document.getElementById("addNumeroBon").value;
+    let nomCarnet = document.getElementById("addNomCarnet").value;
+
+    fetch(`/add_participant`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nom, prenom, telephone, numeroBon, nomCarnet })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Participant ajouté avec succès !");
+            closeAddModal(); // Fermer le modal d'ajout
+
+            // Afficher le QR code dans le modal
+            document.getElementById("qrCodeImage").src = "/" + data.qr_code;
+            document.getElementById("qrCodeModal").style.display = "flex";
+        } else {
+            alert("Erreur lors de l'ajout : " + (data.error || "Problème inconnu."));
+        }
+    })
+    .catch(error => {
+        alert("Erreur lors de la communication avec le serveur !");
+        console.error("Erreur AJAX :", error);
+    });
+}
+
+function closeQrModal() {
+    document.getElementById("qrCodeModal").style.display = "none";
+}
+    
+    </script>
+    <!-- MODAL QR CODE -->
+<div id="qrCodeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>QR Code Généré</h3>
+            <span class="close" onclick="closeQrModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Voici le QR code du participant ajouté :</p>
+            <img id="qrCodeImage" src="" alt="QR Code" style="width: 200px; height: 200px; border: 2px solid #000;">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeQrModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- MODAL POUR AFFICHER LE QR CODE EN GRAND -->
+<div id="qrCodeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>QR Code du Participant</h3>
+            <span class="close" onclick="closeQrModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <img id="qrCodeImage" src="" alt="QR Code" style="width: 300px; height: 300px; border: 2px solid #000;">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeQrModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+<script>
+    // Fonction pour ouvrir le modal et afficher l'image QR Code
+function openQrModal(participant_id) {
+    var modal = document.getElementById("qrModal");
+    var qrImage = document.getElementById("qrImage");
+    
+    // Construire le chemin du QR code généré
+    var qrPath = "/static/qrcode/" + participant_id + ".png";
+    
+    // Changer la source de l'image dans le modal
+    qrImage.src = qrPath;
+
+    // Afficher le modal
+    modal.style.display = "block";
+}
+
+// Fonction pour fermer le modal
+function closeQrModal() {
+    var modal = document.getElementById("qrModal");
+    modal.style.display = "none";
+}
+    </script>
+ <style>
+    /* Le modal (initialement caché) */
+#qrModal {
+    display: none; /* Caché par défaut */
+    position: fixed;
+    z-index: 1000; /* Assurez-vous que le modal QR code est au-dessus des autres éléments */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7); /* Arrière-plan noir semi-transparent */
+    transition: all 0.3s ease; /* Animation d'affichage du modal */
+}
+
+/* Le contenu du modal */
+#qrModal .modal-content {
+    margin: auto;
+    display: block;
+    max-width: 80%;
+    max-height: 80%;
+    border-radius: 8px; /* Ajout d'une bordure arrondie à l'image */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8); /* Ombre portée autour de l'image */
+}
+
+/* Le bouton pour fermer le modal */
+#qrModal .close {
+    color: #fff;
+    font-size: 35px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 25px;
+    cursor: pointer;
+}
+
+/* Effet sur le bouton de fermeture au survol */
+#qrModal .close:hover,
+#qrModal .close:focus {
+    color: #f44336; /* Couleur rouge pour indiquer l'option de fermeture */
+    text-decoration: none;
+}
+
+/* Assurez-vous que le modal ne couvre pas des éléments par défaut si d'autres modals sont présents */
+#qrModal.active {
+    display: block; /* Affichage du modal lorsque la classe active est ajoutée */
+}
+
+ </style>   
+</body>
+</html>

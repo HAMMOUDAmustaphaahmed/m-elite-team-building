@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Votre Pass Événementiel</h1>
+        <p class="hero-subtitle">Connectez-vous à des expériences uniques</p>
+        
+        <div class="action-cards">
+            <!-- Participant Card -->
+            <div class="action-card gradient-purple">
+                <div class="card-icon">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <h2>Inscription Participant</h2>
+                <p>Confirmez votre participation en 2 minutes</p>
+                <a href="{{ url_for('inscription') }}" class="action-button">
+                    Commencer <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Admin Card -->
+            <div class="action-card gradient-blue">
+                <div class="card-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h2>Espace Professionnel</h2>
+                <p>Gestion des accès et participants</p>
+                <a href="{{ url_for('login') }}" class="action-button">
+                    Connexion <i class="fas fa-sign-in-alt"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hero-section {
+        padding: 4rem 1rem;
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+    }
+
+    .hero-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        color: var(--dark);
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .hero-subtitle {
+        color: #64748b;
+        font-size: 1.25rem;
+        margin-bottom: 3rem;
+    }
+
+    .action-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 1rem;
+    }
+
+    .action-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    }
+
+    .gradient-purple {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+    }
+
+    .gradient-blue {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+    }
+
+    .card-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.9;
+    }
+
+    .action-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .action-card p {
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        font-size: 0.95rem;
+    }
+
+    .action-button {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(4px);
+        border-radius: 0.75rem;
+        color: white;
+        text-decoration: none;
+        transition: 0.3s ease;
+    }
+
+    .action-button:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    @media (max-width: 768px) {
+        .hero-title { font-size: 2.5rem; }
+        .action-cards { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}

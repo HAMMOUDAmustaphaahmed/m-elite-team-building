@@ -1,0 +1,10 @@
+flask 
+flask-sqlalchemy 
+flask-login 
+python-dotenv 
+Werkzeug 
+qrcode 
+pillow 
+mysqlclient 
+cryptography
+pymysql

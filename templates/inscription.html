@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Confirmation d'Inscription</h2>
+    <form method="POST" enctype="multipart/form-data" class="ins-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Numéro de Bon</label>
+                <input type="text" name="numero_bon" required>
+            </div>
+            <div class="form-group">
+                <label>Nom du Carnet</label>
+                <input type="text" name="nom_carnet" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" name="nom" required>
+            </div>
+            <div class="form-group">
+                <label>Prénom</label>
+                <input type="text" name="prenom" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label>Téléphone</label>
+                <input type="tel" name="telephone" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Entreprise</label>
+                <input type="text" name="entreprise" required>
+            </div>
+            <div class="form-group">
+                <label>Fonction</label>
+                <input type="text" name="fonction" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Image du Bon</label>
+            <input type="file" name="image_bon" accept="image/*" required>
+        </div>
+        <button type="submit" class="btn-submit">Confirmer</button>
+    </form>
+    {% if success %}
+    <img src="data:image/png;base64,{{ qr_code }}" class="qr-image">
+{% endif %}
+</div>
+{% endblock %}
