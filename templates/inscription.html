@@ -96,10 +96,10 @@
         <form id="inscriptionForm">
             <div class="mb-3">
                 <label for="numero_bon" class="form-label">Numéro de Bon</label>
-                <input type="text" class="form-control" id="numero_bon" name="numero_bon" required>
+                <input type="number" class="form-control" id="numero_bon" name="numero_bon" required>
             </div>
             <div class="mb-3">
-                <label for="nom_carnet" class="form-label">Nom du Carnet</label>
+                <label for="nom_carnet" class="form-label">Evenement</label>
                 <input type="text" class="form-control" id="nom_carnet" name="nom_carnet" required>
             </div>
             <div class="mb-3">
@@ -125,7 +125,8 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="qrCodeModalLabel">Votre QR Code</h5>
+                        <h5 class="modal-title" id="qrCodeModalLabel"> ⚠️ Veuillez gardez ce QR Code ⚠️</h5>
+                        
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-center">
@@ -137,6 +138,13 @@
                 </div>
             </div>
         </div>
+        <style>
+            #qrCodeModal .modal-title {
+                color: black;
+                font-weight: bold;
+            }
+        </style>
+        
     </div>
 
     <script>
