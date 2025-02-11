@@ -31,9 +31,6 @@ Bienvenue dans **Mon Projet Web** !
 
 ---
 
-## 📸 Aperçu du projet
-
-![Aperçu du site](https://m-elite-team-building.onrender.com)
 
 ---
 
